@@ -12,9 +12,7 @@ local function create_buffer(contents, extension)
     return test_bufnr
 end
 
-
 describe("comment lines e2e", function()
-
     it("should comment the lines", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "lua")
@@ -25,7 +23,6 @@ describe("comment lines e2e", function()
 
         assert.are.same({ "-- line 1", "-- line 2", "-- line 3" }, result)
     end)
-
 
     it("should comment single line", function()
         local test_contents = { "line 1", "line 2", "line 3" }
@@ -59,13 +56,9 @@ describe("comment lines e2e", function()
 
         assert.are.same({ "line 1", "// line 2", "// line 3" }, result)
     end)
-
 end)
 
-
-
-describe("uncomment lines e2e", function ()
-
+describe("uncomment lines e2e", function()
     it("should uncomment the lines", function()
         local test_contents = { "// line 1", "// line 2", "// line 3" }
         local test_buffer = create_buffer(test_contents, "go")
@@ -87,5 +80,4 @@ describe("uncomment lines e2e", function ()
 
         assert.are.same({ "line 1", "", "line 3" }, result)
     end)
-
 end)
