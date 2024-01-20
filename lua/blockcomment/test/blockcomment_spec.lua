@@ -7,31 +7,23 @@ local function create_buffer(contents, extension)
     vim.api.nvim_buf_set_option(test_bufnr, "filetype", extension)
     vim.api.nvim_set_current_buf(test_bufnr)
 
+    blockcomment.buffer = test_bufnr
+
     return test_bufnr
 end
 
-describe("commenting out lines", function()
+
+describe("comment lines e2e", function()
 
     it("should comment the lines", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "lua")
 
-        blockcomment.comment_lines(1, 3)
+        blockcomment.process_lines(1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
         assert.are.same({ "-- line 1", "-- line 2", "-- line 3" }, result)
-    end)
-
-    it("should not comment empty lines", function()
-        local test_contents = { "line 1", "", "line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
-
-        blockcomment.comment_lines(1, 3)
-
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
-
-        assert.are.same({ "// line 1", "", "// line 3" }, result)
     end)
 
 
@@ -39,18 +31,29 @@ describe("commenting out lines", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.comment_lines(2, 2)
+        blockcomment.process_lines(2, 2)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
         assert.are.same({ "line 1", "// line 2", "line 3" }, result)
     end)
 
+    it("should not comment empty lines", function()
+        local test_contents = { "line 1", "", "line 3" }
+        local test_buffer = create_buffer(test_contents, "go")
+
+        blockcomment.process_lines(1, 3)
+
+        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+
+        assert.are.same({ "// line 1", "", "// line 3" }, result)
+    end)
+
     it("should ignore out of range line number", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.comment_lines(2, 20)
+        blockcomment.process_lines(2, 20)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -61,22 +64,28 @@ end)
 
 
 
-
-describe("uncommenting lines", function()
+describe("uncomment lines e2e", function ()
 
     it("should uncomment the lines", function()
         local test_contents = { "// line 1", "// line 2", "// line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.uncomment_lines(1, 3)
+        blockcomment.process_lines(1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
         assert.are.same({ "line 1", "line 2", "line 3" }, result)
     end)
 
+    it("should ignore empty lines", function()
+        local test_contents = { "-- line 1", "", "-- line 3" }
+        local test_buffer = create_buffer(test_contents, "lua")
+
+        blockcomment.process_lines(1, 3)
+
+        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+
+        assert.are.same({ "line 1", "", "line 3" }, result)
+    end)
 
 end)
-
-
-
