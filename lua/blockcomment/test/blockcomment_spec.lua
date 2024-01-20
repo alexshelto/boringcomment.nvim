@@ -1,4 +1,4 @@
-local blockcomment = require("blockcomment.init")
+local blockcomment = require("blockcomment.worker")
 
 local function create_buffer(contents, extension)
     local test_bufnr = vim.api.nvim_create_buf(false, true)
@@ -7,7 +7,7 @@ local function create_buffer(contents, extension)
     vim.api.nvim_buf_set_option(test_bufnr, "filetype", extension)
     vim.api.nvim_set_current_buf(test_bufnr)
 
-    blockcomment.buffer = test_bufnr
+    blockcomment.set_buffer(test_bufnr)
 
     return test_bufnr
 end
