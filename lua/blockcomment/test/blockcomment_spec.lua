@@ -10,19 +10,8 @@ local function create_buffer(contents, extension)
     return test_bufnr
 end
 
-describe("gets comment string", function()
-    it("lua", function()
-        local test_contents = { "line 1", "line 2", "line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
-
-        local comment_string = blockcomment.get_comment_string()
-
-        assert.are.same(comment_string, "// %s")
-    end)
-end)
-
 describe("commenting out lines", function()
+
     it("should comment the lines", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "lua")
@@ -44,4 +33,50 @@ describe("commenting out lines", function()
 
         assert.are.same({ "// line 1", "", "// line 3" }, result)
     end)
+
+
+    it("should comment single line", function()
+        local test_contents = { "line 1", "line 2", "line 3" }
+        local test_buffer = create_buffer(test_contents, "go")
+
+        blockcomment.comment_lines(2, 2)
+
+        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+
+        assert.are.same({ "line 1", "// line 2", "line 3" }, result)
+    end)
+
+    it("should ignore out of range line number", function()
+        local test_contents = { "line 1", "line 2", "line 3" }
+        local test_buffer = create_buffer(test_contents, "go")
+
+        blockcomment.comment_lines(2, 20)
+
+        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+
+        assert.are.same({ "line 1", "// line 2", "// line 3" }, result)
+    end)
+
 end)
+
+
+
+
+describe("uncommenting lines", function()
+
+    it("should uncomment the lines", function()
+        local test_contents = { "// line 1", "// line 2", "// line 3" }
+        local test_buffer = create_buffer(test_contents, "go")
+
+        blockcomment.uncomment_lines(1, 3)
+
+        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+
+        assert.are.same({ "line 1", "line 2", "line 3" }, result)
+    end)
+
+
+end)
+
+
+
