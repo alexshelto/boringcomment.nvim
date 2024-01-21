@@ -13,8 +13,27 @@ M.get_buffer = function()
     return M.buffer
 end
 
-M.set_buffer = function(buffer)
-    M.buffer = buffer
+M.set_buffer = function()
+    print("Setting buffer")
+    M.buffer = vim.api.nvim_get_current_buf()
+end
+
+M.get_visual_line_numbers = function()
+    local current_win = vim.api.nvim_get_current_win()
+    local from = vim.fn.line("v", current_win)
+    local to, col = vim.api.nvim_win_get_cursor(current_win)
+
+    return from, tonumber(to[1])
+end
+
+M.comment_visual_selection = function()
+    if not M.is_buffer_set() then
+        print("Error: Current buffer is not set.")
+    end
+
+    local from, to = M.get_visual_line_numbers()
+
+    M.process_lines(math.min(from, to), math.max(from,to))
 end
 
 M.process_lines = function(from, to)
