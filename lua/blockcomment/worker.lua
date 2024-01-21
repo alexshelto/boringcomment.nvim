@@ -33,7 +33,7 @@ M.comment_visual_selection = function()
 
     local from, to = M.get_visual_line_numbers()
 
-    M.process_lines(math.min(from, to), math.max(from,to))
+    M.process_lines(math.min(from, to), math.max(from, to))
 end
 
 M.process_lines = function(from, to)
