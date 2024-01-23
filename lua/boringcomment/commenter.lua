@@ -18,7 +18,7 @@ M.comment_current_line = function()
     local current_buf = vim.api.nvim_get_current_buf()
     local _, line_number = M.get_visual_line_numbers()
     print(string.format("current line num: %d", line_number))
-    M.process_lines(current_buf,line_number, line_number)
+    M.process_lines(current_buf, line_number, line_number)
 end
 
 M.get_comment_string = function(current_buf)
@@ -57,7 +57,7 @@ end
 M.is_already_commented = function(lines, comment_prefix)
     for _, line in ipairs(lines) do
         local is_commented = line:match("^%s*" .. vim.pesc(comment_prefix))
-            ~= nil
+                ~= nil
             or line == ""
 
         if not is_commented then

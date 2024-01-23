@@ -1,4 +1,4 @@
-local blockcomment = require("blockcomment.commenter")
+local boringcomment = require("boringcomment.commenter")
 
 local function create_buffer(contents, extension)
     local test_bufnr = vim.api.nvim_create_buf(false, true)
@@ -15,7 +15,7 @@ describe("comment lines e2e", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "lua")
 
-        blockcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(test_buffer, 1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -26,7 +26,7 @@ describe("comment lines e2e", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.process_lines(test_buffer, 2, 2)
+        boringcomment.process_lines(test_buffer, 2, 2)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -37,7 +37,7 @@ describe("comment lines e2e", function()
         local test_contents = { "line 1", "", "line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(test_buffer, 1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -48,7 +48,7 @@ describe("comment lines e2e", function()
         local test_contents = { "line 1", "line 2", "line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.process_lines(test_buffer, 2, 20)
+        boringcomment.process_lines(test_buffer, 2, 20)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -61,7 +61,7 @@ describe("uncomment lines e2e", function()
         local test_contents = { "// line 1", "// line 2", "// line 3" }
         local test_buffer = create_buffer(test_contents, "go")
 
-        blockcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(test_buffer, 1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
@@ -72,7 +72,7 @@ describe("uncomment lines e2e", function()
         local test_contents = { "-- line 1", "", "-- line 3" }
         local test_buffer = create_buffer(test_contents, "lua")
 
-        blockcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(test_buffer, 1, 3)
 
         local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
 
