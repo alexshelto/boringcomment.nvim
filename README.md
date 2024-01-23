@@ -1,8 +1,9 @@
 # boringcomment.nvim
-![comment](https://github.com/alexshelto/boringcomment.nvim/assets/39957709/558d341a-2e4a-43a9-b8f3-af6575608635)
+
+![output](https://github.com/alexshelto/boringcomment.nvim/assets/39957709/14fa1a3c-2440-4538-9d23-aa342fa2b7f4)
 
 
-## What Is Telescope?
+## What Is boringcomment?
 `boringcomment.nvim` is simply a way to comment & uncomment multiple lines of code in visual mode at once, and single lines in normal mode. Yep thats kinda it
 
 
