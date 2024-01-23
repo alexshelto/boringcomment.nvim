@@ -1,1 +1,1 @@
-require("blockcomment.worker")
+require("blockcomment.commenter")
