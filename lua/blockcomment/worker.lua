@@ -1,48 +1,20 @@
 local M = {}
 
-M.buffer = nil
-
-M.is_buffer_set = function()
-    return M.buffer ~= nil
-end
-
-M.get_buffer = function()
-    if not M.is_buffer_set() then
-        print("Error: Current buffer is not set.")
-    end
-    return M.buffer
-end
-
-M.set_buffer = function()
-    print("Setting buffer")
-    M.buffer = vim.api.nvim_get_current_buf()
-end
-
 M.get_visual_line_numbers = function()
     local current_win = vim.api.nvim_get_current_win()
     local from = vim.fn.line("v", current_win)
-    local to, col = vim.api.nvim_win_get_cursor(current_win)
+    local to, _ = vim.api.nvim_win_get_cursor(current_win)
 
     return from, tonumber(to[1])
 end
 
 M.comment_visual_selection = function()
-    if not M.is_buffer_set() then
-        print("Error: Current buffer is not set.")
-    end
-
+    local current_buf = vim.api.nvim_get_current_buf()
     local from, to = M.get_visual_line_numbers()
-
-    M.process_lines(math.min(from, to), math.max(from, to))
+    M.process_lines(current_buf, math.min(from, to), math.max(from, to))
 end
 
-M.process_lines = function(from, to)
-    local current_buf = M.get_buffer()
-    if not current_buf then
-        print("Error: Current buffer is not set.")
-        return
-    end
-
+M.process_lines = function(current_buf, from, to)
     local comment_string =
         vim.api.nvim_buf_get_option(current_buf, "commentstring")
 
@@ -62,9 +34,14 @@ M.process_lines = function(from, to)
         M.is_already_commented(current_lines, cleaned_comment_string)
 
     if code_is_commented == true then
-        M.uncomment_lines(from, current_lines, comment_string)
+        M.uncomment_lines(
+            current_buf,
+            from,
+            current_lines,
+            cleaned_comment_string
+        )
     else
-        M.comment_lines(from, current_lines, comment_string)
+        M.comment_lines(current_buf, from, current_lines, comment_string)
     end
 end
 
@@ -81,30 +58,12 @@ M.is_already_commented = function(lines, comment_prefix)
     return true
 end
 
-M.is_line_commented = function(line)
-    local current_buf = M.buffer
-    if not current_buf then
-        print("Error: Current buffer is not set.")
-        return
-    end
-
-    local comment_string =
-        vim.api.nvim_buf_get_option(current_buf, "commentstring")
-
-    local cleaned_comment_string = comment_string:gsub("%%s", "")
+M.is_line_commented = function(line, cleaned_comment_string)
     return line:match("^%s*" .. vim.pesc(cleaned_comment_string)) ~= nil
         or line == ""
 end
 
-M.uncomment_lines = function(from, lines, comment_string)
-    local current_buf = M.get_buffer()
-    if not current_buf then
-        print("Error: Couldnt get buffer")
-        return false
-    end
-
-    local cleaned_comment_string = comment_string:gsub("%%s", "")
-
+M.uncomment_lines = function(current_buf, from, lines, cleaned_comment_string)
     local no_comment_pattern = "^%s*" .. vim.pesc(cleaned_comment_string)
 
     for i, line in ipairs(lines) do
@@ -119,13 +78,7 @@ M.uncomment_lines = function(from, lines, comment_string)
     end
 end
 
-M.comment_lines = function(from, lines, comment_string)
-    local current_buf = M.get_buffer()
-    if not current_buf then
-        print("Error: Couldnt get buffer")
-        return false
-    end
-
+M.comment_lines = function(current_buf, from, lines, comment_string)
     for i, line in ipairs(lines) do
         if line ~= "" then
             vim.api.nvim_buf_set_lines(
