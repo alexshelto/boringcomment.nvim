@@ -14,7 +14,7 @@ M.comment_visual_selection = function()
     M.process_lines(current_buf, math.min(from, to), math.max(from, to))
 end
 
-M.process_lines = function(current_buf, from, to)
+M.get_comment_string = function(current_buf)
     local comment_string =
         vim.api.nvim_buf_get_option(current_buf, "commentstring")
 
@@ -22,18 +22,20 @@ M.process_lines = function(current_buf, from, to)
         print(
             "ERROR: Unable to determine comment characters for the current buffer"
         )
-        return
+        return nil
     end
 
+    return comment_string
+end
+
+M.process_lines = function(current_buf, from, to)
+    local comment_string = M.get_comment_string(current_buf)
     local cleaned_comment_string = comment_string:gsub("%%s", "")
 
     local current_lines =
         vim.api.nvim_buf_get_lines(current_buf, from - 1, to, false)
 
-    local code_is_commented =
-        M.is_already_commented(current_lines, cleaned_comment_string)
-
-    if code_is_commented == true then
+    if M.is_already_commented(current_lines, cleaned_comment_string) then
         M.uncomment_lines(
             current_buf,
             from,
@@ -66,27 +68,31 @@ end
 M.uncomment_lines = function(current_buf, from, lines, cleaned_comment_string)
     local no_comment_pattern = "^%s*" .. vim.pesc(cleaned_comment_string)
 
-    for i, line in ipairs(lines) do
-        local line_without_comments = line:gsub(no_comment_pattern, "")
-        vim.api.nvim_buf_set_lines(
-            current_buf,
-            from - 1 + i - 1,
-            from - 1 + i,
-            false,
-            { line_without_comments }
-        )
+    local action = function(line)
+        return line:gsub(no_comment_pattern, "")
     end
+
+    M.apply_action_to_lines(current_buf, from, lines, action)
 end
 
 M.comment_lines = function(current_buf, from, lines, comment_string)
+    local action = function(line)
+        return comment_string:format(line)
+    end
+
+    M.apply_action_to_lines(current_buf, from, lines, action)
+end
+
+M.apply_action_to_lines = function(current_buf, from, lines, action)
     for i, line in ipairs(lines) do
         if line ~= "" then
+            local processed_line = action(line)
             vim.api.nvim_buf_set_lines(
                 current_buf,
                 from - 1 + i - 1,
                 from - 1 + i,
                 false,
-                { comment_string:format(line) }
+                { processed_line }
             )
         end
     end
