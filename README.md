@@ -16,13 +16,13 @@ use 'alexshelto/boringcomment.nvim'
 ## Usage
 Using Lua:
 ```lua
-local blockcomment = require("blockcomment.commenter")
+local boringcomment = require("boringcomment.commenter")
 
 vim.keymap.set('x', "<leader>/", function()
-    blockcomment.comment_visual_selection()
+    boringcomment.comment_visual_selection()
 end)
 
 vim.keymap.set('n', "<leader>/", function ()
-    blockcomment.comment_current_line()
+    boringcomment.comment_current_line()
 end)
 ```
