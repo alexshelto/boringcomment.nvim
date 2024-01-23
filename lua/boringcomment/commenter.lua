@@ -17,7 +17,6 @@ end
 M.comment_current_line = function()
     local current_buf = vim.api.nvim_get_current_buf()
     local _, line_number = M.get_visual_line_numbers()
-    print(string.format("current line num: %d", line_number))
     M.process_lines(current_buf, line_number, line_number)
 end
 
