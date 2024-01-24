@@ -13,6 +13,15 @@ Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 use 'alexshelto/boringcomment.nvim'
 ```
 
+Using [LazyVim](https://github.com/LazyVim/LazyVim)
+```lua
+return {
+  {
+    "alexshelto/boringcomment.nvim",
+  },
+}
+```
+
 ## Usage
 Using Lua:
 ```lua
