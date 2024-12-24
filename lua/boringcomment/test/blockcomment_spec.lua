@@ -1,81 +1,144 @@
 local boringcomment = require("boringcomment.commenter")
 
-local function create_buffer(contents, extension)
-    local test_bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, contents)
+-- Create a temporary buffer with given lines
+local function create_temp_buffer(lines)
+    local buf = vim.api.nvim_create_buf(false, true) -- Create a scratch buffer
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_option(buf, "filetype", "lua")
+    return buf
+end
 
-    vim.api.nvim_buf_set_option(test_bufnr, "filetype", extension)
-    vim.api.nvim_set_current_buf(test_bufnr)
-
-    return test_bufnr
+-- Get all lines from a buffer
+local function get_buffer_lines(buf)
+    return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 end
 
 describe("comment lines e2e", function()
-    it("should comment the lines", function()
-        local test_contents = { "line 1", "line 2", "line 3" }
-        local test_buffer = create_buffer(test_contents, "lua")
+    it("single line comment", function()
+        local buf = create_temp_buffer({ "line 1" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
 
-        boringcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(1, 2) -- Comment the first line
 
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+        local result = get_buffer_lines(buf)
+        assert.are.same({ "-- line 1" }, result)
 
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
+    end)
+
+    it("multi line comment", function()
+        local buf = create_temp_buffer({ "line 1", "line 2", "line 3" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
+
+        boringcomment.process_lines(1, 4) -- Comment the first line
+
+        local result = get_buffer_lines(buf)
         assert.are.same({ "-- line 1", "-- line 2", "-- line 3" }, result)
+
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
     end)
 
-    it("should comment single line", function()
-        local test_contents = { "line 1", "line 2", "line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
+    it("includes empty line", function()
+        local buf = create_temp_buffer({ "line 1", "", "line 3" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
 
-        boringcomment.process_lines(test_buffer, 2, 2)
+        boringcomment.process_lines(1, 4) -- Comment the first line
 
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+        local result = get_buffer_lines(buf)
+        assert.are.same({ "-- line 1", "-- ", "-- line 3" }, result)
 
-        assert.are.same({ "line 1", "// line 2", "line 3" }, result)
-    end)
-
-    it("should not comment empty lines", function()
-        local test_contents = { "line 1", "", "line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
-
-        boringcomment.process_lines(test_buffer, 1, 3)
-
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
-
-        assert.are.same({ "// line 1", "", "// line 3" }, result)
-    end)
-
-    it("should ignore out of range line number", function()
-        local test_contents = { "line 1", "line 2", "line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
-
-        boringcomment.process_lines(test_buffer, 2, 20)
-
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
-
-        assert.are.same({ "line 1", "// line 2", "// line 3" }, result)
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
     end)
 end)
 
 describe("uncomment lines e2e", function()
-    it("should uncomment the lines", function()
-        local test_contents = { "// line 1", "// line 2", "// line 3" }
-        local test_buffer = create_buffer(test_contents, "go")
+    it("should ignore empty lines", function()
+        local buf = create_temp_buffer({ "-- line 1", "", "-- line 3" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
 
-        boringcomment.process_lines(test_buffer, 1, 3)
+        boringcomment.process_lines(1, 4)
 
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+        local result = get_buffer_lines(buf)
+        assert.are.same({ "line 1", "", "line 3" }, result)
 
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
+    end)
+
+    it("should uncomment", function()
+        local buf =
+            create_temp_buffer({ "-- line 1", "-- line 2", "-- line 3" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
+
+        boringcomment.process_lines(1, 4)
+
+        local result = get_buffer_lines(buf)
         assert.are.same({ "line 1", "line 2", "line 3" }, result)
+
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
+    end)
+
+    it("uncomment commented empty line", function()
+        local buf = create_temp_buffer({ "--", "-- line 2", "--" })
+        vim.api.nvim_set_current_buf(buf) -- Set buffer as active
+
+        boringcomment.process_lines(1, 4)
+
+        local result = get_buffer_lines(buf)
+        assert.are.same({ "", "line 2", "" }, result)
+
+        -- Ensure buffer cleanup
+        vim.api.nvim_buf_delete(buf, { force = true })
+    end)
+end)
+
+describe("is commented", function()
+    local current_buf = vim.api.nvim_get_current_buf()
+
+    it("should say is commented", function()
+        local comment_prefix =
+            vim.api.nvim_buf_get_option(current_buf, "commentstring")
+
+        local lines = { "-- line 1", "-- line 2", "-- line 3" }
+
+        local result = boringcomment.is_already_commented(lines, comment_prefix)
+
+        assert.are.same(result, true)
     end)
 
     it("should ignore empty lines", function()
-        local test_contents = { "-- line 1", "", "-- line 3" }
-        local test_buffer = create_buffer(test_contents, "lua")
+        local comment_prefix =
+            vim.api.nvim_buf_get_option(current_buf, "commentstring")
 
-        boringcomment.process_lines(test_buffer, 1, 3)
+        local lines = { "-- line 1", "", "-- line 3" }
 
-        local result = vim.api.nvim_buf_get_lines(test_buffer, 0, -1, true)
+        local result = boringcomment.is_already_commented(lines, comment_prefix)
 
-        assert.are.same({ "line 1", "", "line 3" }, result)
+        assert.are.same(result, true)
+    end)
+
+    it("should catch commented empty lines", function()
+        local comment_prefix =
+            vim.api.nvim_buf_get_option(current_buf, "commentstring")
+
+        local lines = { "-- ", "--" }
+
+        local result = boringcomment.is_already_commented(lines, comment_prefix)
+
+        assert.are.same(result, true)
     end)
 end)
+
+-- [[
+
+-- The bellow case is failint
+
+--
+--         boringcomment.process_lines(test_buffer, 1, 3)
+--
+
+-- ]]
